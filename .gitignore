@@ -1,5 +1,6 @@
 *.csv
 *.bin
+*.xls
 *.png
 *.ipynb_checkpoints
 *__pycache__/
