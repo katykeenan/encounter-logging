@@ -97,38 +97,41 @@ def load_cal_bin(fname, n_pts):
     # need timestamp, channel, mac or encounter id
     # “time since device boot”, “mac — a vector with 6 values”, “rssi”, “channel”, “rpi — a vector with 20 values”
     # convert mac vector with 6 values to hexadecimal
-        i=0
-        device_time = np.empty(len(datasets[0]['data']))
-        mac = [None]*len(datasets[0]['data'])
-        rssi = np.empty(len(datasets[0]['data']))
-        ch = np.empty(len(datasets[0]['data']))
 
-        for row in datasets[index]['data']:
-            device_time[i] = row[0]
-            mac[i] = (bytes(row[1]).hex())
-            rssi[i] = row[2]
-            ch[i] = row[3]
-            i += 1
+        if len(datasets[index]['data']) > 2*n_pts:
+            i=0
+            device_time = np.empty(len(datasets[index]['data']))
+            mac = [None]*len(datasets[index]['data'])
+            rssi = np.empty(len(datasets[index]['data']))
+            ch = np.empty(len(datasets[index]['data']))
 
-    # make the dataframe
-        d = {'device_time':device_time, 'mac':mac, 'rssi':rssi, 'ch':ch}
-        df = pd.DataFrame(data=d)
-        if df['ch'][1] > 0:
-            df['ch'] = -df['ch']
-        df['epochtime'] = datasets[index]['header']['epochtime']
-        df['offsettime'] = datasets[index]['header']['offsettime']
-        df['offsetovflw'] = datasets[index]['header']['offsetovflw']
-        df['distance_header'] = datasets[index]['header']['distance']
-        df['distance_fname'] = distance*100 #make both distances in cm
-        df['cal_config'] = cal_config
-        df['orientation'] = datasets[index]['header']['orientation']
-        df['encounter_id'] = df['mac']
-        df['time'] = (df['device_time']-datasets[index]['header']['offsettime'])/1000 + datasets[index]['header']['epochtime'] - 6*3600
-        df['time'] = df['time'].astype('datetime64[s]')
+            for row in datasets[index]['data']:
+                device_time[i] = row[0]
+                mac[i] = (bytes(row[1]).hex())
+                rssi[i] = row[2]
+                ch[i] = row[3]
+                i += 1
 
-        # discard the first and last n data points
-        df.drop(df.head(n_pts).index, inplace = True)
-        df.drop(df.tail(n_pts).index, inplace = True)
+        # make the dataframe
+            d = {'device_time':device_time, 'mac':mac, 'rssi':rssi, 'ch':ch}
+            df = pd.DataFrame(data=d)
+            if df['ch'][1] > 0:
+                df['ch'] = -df['ch']
+            df['epochtime'] = datasets[index]['header']['epochtime']
+            df['offsettime'] = datasets[index]['header']['offsettime']
+            df['offsetovflw'] = datasets[index]['header']['offsetovflw']
+            df['distance_header'] = datasets[index]['header']['distance']
+            df['distance_fname'] = distance*100 #make both distances in cm
+            df['cal_config'] = cal_config
+            df['orientation'] = datasets[index]['header']['orientation']
+            df['encounter_id'] = df['mac']
+            df['time'] = (df['device_time']-datasets[index]['header']['offsettime'])/1000 + datasets[index]['header']['epochtime'] - 6*3600
+            df['time'] = df['time'].astype('datetime64[s]')
+
+            # discard the first and last n data points
+            df.drop(df.head(n_pts).index, inplace = True)
+            df.drop(df.tail(n_pts).index, inplace = True)
+            
     return df
 
 def label_cal_data(df):
